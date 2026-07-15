@@ -1,6 +1,27 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="AirMind AI")
+from app.api.aqi import router as aqi_router
+from app.database.mongodb import (
+    connect_to_mongodb,
+    close_mongodb_connection,
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_to_mongodb()
+    yield
+    await close_mongodb_connection()
+
+
+app = FastAPI(
+    title="AirMind AI",
+    lifespan=lifespan
+)
+
+app.include_router(aqi_router)
+
 
 @app.get("/")
 def root():
