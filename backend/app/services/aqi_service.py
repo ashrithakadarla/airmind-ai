@@ -9,9 +9,6 @@ async def create_aqi(data: AQIResponse):
     return await insert_aqi(data.model_dump())
 
 async def get_latest_aqi():
-    """
-    Fetch the latest AQI record from MongoDB and return it as an AQIResponse.
-    """
     data = await repo_get_latest_aqi()
 
     if not data:
@@ -27,13 +24,7 @@ async def get_latest_aqi():
         timestamp=data["timestamp"]
     )
 
-
 async def get_aqi_history(limit: int = 50):
-    """
-    Fetch a list of historical AQI records from MongoDB and return them as
-    a list of `AQIResponse` objects. Returns an empty list if there are no
-    records.
-    """
     records = await repo_get_aqi_history(limit=limit)
 
     if not records:
