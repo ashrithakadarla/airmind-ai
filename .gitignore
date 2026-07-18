@@ -252,3 +252,9 @@ coverage/
 # Temporary files
 *.tmp
 *.bak
+
+ml/models/*.pkl
+ml/datasets/*.csv
+venv/
+__pycache__/
+*.pyc

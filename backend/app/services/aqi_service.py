@@ -1,17 +1,22 @@
+import logging
+from typing import Optional
+
+from app.integrations.data_collector import collect_environmental_data
 from app.models.aqi import AQIResponse
 from app.repositories.aqi_repository import (
     get_latest_aqi as repo_get_latest_aqi,
     get_aqi_history as repo_get_aqi_history,
     insert_aqi,
+    insert_environmental_data,
 )
+
+
+logger = logging.getLogger(__name__)
 
 async def create_aqi(data: AQIResponse):
     return await insert_aqi(data.model_dump())
 
 async def get_latest_aqi():
-    """
-    Fetch the latest AQI record from MongoDB and return it as an AQIResponse.
-    """
     data = await repo_get_latest_aqi()
 
     if not data:
@@ -27,17 +32,25 @@ async def get_latest_aqi():
         timestamp=data["timestamp"]
     )
 
-
 async def get_aqi_history(limit: int = 50):
-    """
-    Fetch a list of historical AQI records from MongoDB and return them as
-    a list of `AQIResponse` objects. Returns an empty list if there are no
-    records.
-    """
     records = await repo_get_aqi_history(limit=limit)
 
     if not records:
         return []
+
+    # Ignore documents that do not match the AQIResponse schema.
+    valid_records = [
+        r for r in records
+        if {
+            "city",
+            "aqi",
+            "pm25",
+            "pm10",
+            "temperature",
+            "humidity",
+            "timestamp",
+        }.issubset(r.keys())
+    ]
 
     return [
         AQIResponse(
@@ -49,5 +62,38 @@ async def get_aqi_history(limit: int = 50):
             humidity=r["humidity"],
             timestamp=r["timestamp"],
         )
-        for r in records
+        for r in valid_records
     ]
+    
+async def collect_and_store_environmental_data() -> Optional[str]:
+    """Collect standardized environmental data and store it in MongoDB.
+
+    Returns:
+        The inserted MongoDB document ID when collection succeeds, or ``None``
+        if the upstream collection or database write fails.
+    """
+
+    # Collect the standardized environmental payload from the integration layer.
+    try:
+        data = collect_environmental_data()
+    except Exception as exc:
+        logger.exception("Environmental data collection failed: %s", exc)
+        return None
+
+    # Stop here when the collector reports a failure.
+    if not data.get("success"):
+        return None
+
+    # Extract only the standardized document body that should be persisted.
+    environmental_document = data.get("data", {})
+    if not environmental_document:
+        return None
+
+    # Persist the full document and return the inserted MongoDB document ID.
+    try:
+        inserted_id = await insert_environmental_data(environmental_document)
+    except Exception as exc:
+        logger.exception("Failed to store environmental data in MongoDB: %s", exc)
+        return None
+
+    return str(inserted_id)

@@ -1,5 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
-from app.services.aqi_service import get_latest_aqi, get_aqi_history, create_aqi
+from app.services.aqi_service import (
+    get_latest_aqi,
+    get_aqi_history,
+    create_aqi,
+    collect_and_store_environmental_data,
+)
 from app.models.aqi import AQIResponse
 
 router = APIRouter(
@@ -29,3 +34,22 @@ async def create_aqi_endpoint(payload: AQIResponse):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
     return {"message": "AQI data inserted successfully", "id": inserted_id}
+
+
+@router.post("/collect", status_code=status.HTTP_201_CREATED)
+async def collect_environmental_data_endpoint():
+    """
+    Collect live AQI and weather data from external APIs,
+    standardize the data, and store it in MongoDB.
+    """
+    # Delegate collection and persistence to the service layer.
+    inserted_id = await collect_and_store_environmental_data()
+
+    # Convert any collection or storage failure into a server error response.
+    if inserted_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to collect or store environmental data.",
+        )
+
+    return {"message": "Environmental data collected and stored successfully", "id": inserted_id}
