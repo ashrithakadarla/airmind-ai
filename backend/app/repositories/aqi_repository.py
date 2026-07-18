@@ -7,6 +7,7 @@ from app.database.mongodb import get_database
 # Collection name used by this repository. Centralizing the name makes
 # refactoring and testing easier and follows clean-architecture practices.
 COLLECTION = "aqi"
+ENVIRONMENTAL_COLLECTION = "environmental_data"
 
 
 def _stringify_id(document: dict) -> dict:
@@ -41,6 +42,18 @@ async def insert_aqi(data: dict) -> str:
 		raise RuntimeError("Database not initialized. Call connect_to_mongodb() first.")
 
 	result = await db[COLLECTION].insert_one(data)
+	return str(result.inserted_id)
+
+
+async def insert_environmental_data(document: dict) -> str:
+	"""Insert an environmental snapshot into the dedicated collection."""
+
+	db = get_database()
+	if db is None:
+		raise RuntimeError("Database not initialized. Call connect_to_mongodb() first.")
+
+	# Keep environmental records separate from flat AQI documents.
+	result = await db[ENVIRONMENTAL_COLLECTION].insert_one(document)
 	return str(result.inserted_id)
 
 

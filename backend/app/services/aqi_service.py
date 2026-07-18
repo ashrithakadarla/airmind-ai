@@ -7,6 +7,7 @@ from app.repositories.aqi_repository import (
     get_latest_aqi as repo_get_latest_aqi,
     get_aqi_history as repo_get_aqi_history,
     insert_aqi,
+    insert_environmental_data,
 )
 
 
@@ -37,6 +38,20 @@ async def get_aqi_history(limit: int = 50):
     if not records:
         return []
 
+    # Ignore documents that do not match the AQIResponse schema.
+    valid_records = [
+        r for r in records
+        if {
+            "city",
+            "aqi",
+            "pm25",
+            "pm10",
+            "temperature",
+            "humidity",
+            "timestamp",
+        }.issubset(r.keys())
+    ]
+
     return [
         AQIResponse(
             city=r["city"],
@@ -47,7 +62,7 @@ async def get_aqi_history(limit: int = 50):
             humidity=r["humidity"],
             timestamp=r["timestamp"],
         )
-        for r in records
+        for r in valid_records
     ]
     
 async def collect_and_store_environmental_data() -> Optional[str]:
@@ -76,7 +91,7 @@ async def collect_and_store_environmental_data() -> Optional[str]:
 
     # Persist the full document and return the inserted MongoDB document ID.
     try:
-        inserted_id = await insert_aqi(environmental_document)
+        inserted_id = await insert_environmental_data(environmental_document)
     except Exception as exc:
         logger.exception("Failed to store environmental data in MongoDB: %s", exc)
         return None
