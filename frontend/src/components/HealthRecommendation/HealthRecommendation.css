@@ -1,0 +1,28 @@
+.health-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: linear-gradient(135deg, #f7fbff 0%, #eef7ff 100%);
+  border: 1px solid #dfeefc;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 16px 32px rgba(15, 76, 129, 0.06);
+}
+
+.health-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: #0f4c81;
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+.health-card__text {
+  margin: 0;
+  color: #264b68;
+  font-weight: 600;
+}
