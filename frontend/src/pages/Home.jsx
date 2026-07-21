@@ -2,48 +2,155 @@ import AQICard from '../components/AQICard/AQICard'
 import AQIHistoryChart from '../components/Charts/AQIHistoryChart'
 import PollutantPieChart from '../components/Charts/PollutionPieChart'
 import PollutantTrendChart from '../components/Charts/PollutantTrendChart'
-import Footer from '../components/Footer/Footer'
 import AQIMap from '../components/Map/AQIMap'
 import PollutantCard from '../components/PollutantCard/PollutantCard'
 import WeatherCard from '../components/WeatherCard/WeatherCard'
-import { dashboardData } from '../data/mockData.js'
+import { useEffect, useState } from "react";
+import { useCity } from "../context/CityContext";
+import {
+  getLatestAQI,
+  getAQIHistory,
+  getLatestEnvironment,
+} from "../services/api";
+import { getAQICategory } from "../utils/aqi";
 import './Home.css'
 
 function Home() {
-  const { city, currentAQI, category, weather, pollutants } = dashboardData
+  const { selectedCity } = useCity();
+  
+  const [dashboardData, setDashboardData] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [environment, setEnvironment] = useState(null);
+  const [aqiHistory, setAQIHistory] = useState([]);
 
-  const chartHistory = [
-    { label: 'Mon', aqi: 62 },
-    { label: 'Tue', aqi: 70 },
-    { label: 'Wed', aqi: 68 },
-    { label: 'Thu', aqi: 74 },
-    { label: 'Fri', aqi: 78 },
-    { label: 'Sat', aqi: 72 },
-    { label: 'Sun', aqi: 69 },
-  ]
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [latest, history, environment] = await Promise.all([
+            getLatestAQI(selectedCity),
+            getAQIHistory(selectedCity, 10),
+            getLatestEnvironment(selectedCity),
+        ]);
 
-  const pollutantTrendData = [
-    { label: 'Mon', pm25: 21, pm10: 38 },
-    { label: 'Tue', pm25: 24, pm10: 41 },
-    { label: 'Wed', pm25: 22, pm10: 39 },
-    { label: 'Thu', pm25: 27, pm10: 45 },
-    { label: 'Fri', pm25: 25, pm10: 42 },
-    { label: 'Sat', pm25: 23, pm10: 40 },
-    { label: 'Sun', pm25: 20, pm10: 36 },
-  ]
+        setDashboardData(latest);
+        setHistory(history);
+        setEnvironment(environment);
+        setAQIHistory(history);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 300000); // every 5 minutes
+
+    return () => clearInterval(interval);
+
+  }, [selectedCity]);
+
+  if (loading) return <h2>Loading...</h2>;
+  if (!dashboardData) return <h2>Unable to load AQI data.</h2>;
+  
+
+  const currentAQI = dashboardData.aqi;
+
+  const weather = {
+      temperature: environment.weather.temperature,
+      humidity: environment.weather.humidity,
+      pressure: environment.weather.pressure,
+      windSpeed: environment.weather.wind_speed,
+  };
+
+
+  const category = getAQICategory(currentAQI);
+  
+  const pollutants = [
+    {
+      name: "PM2.5",
+      value: dashboardData.pm25,
+    },
+    {
+      name: "PM10",
+      value: dashboardData.pm10,
+    },
+  ];
+  const chartHistory = history.map((item) => ({
+      label: new Date(item.timestamp).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+      }),
+      aqi: item.aqi,
+  }));
+
+  const pollutantTrendData = history
+    .slice()
+    .reverse()
+    .map((item) => ({
+      label: new Date(item.timestamp).toLocaleDateString(),
+      pm25: item.pm25,
+      pm10: item.pm10,
+    }));
 
   const pollutantPieData = pollutants.map((pollutant) => ({
     name: pollutant.name,
     value: pollutant.value,
   }))
 
-  const hotspotData = [
-    { name: 'Industrial Area', aqi: 165, category: 'Very Poor', coordinates: [17.41, 78.41] },
-    { name: 'City Center', aqi: 120, category: 'Poor', coordinates: [17.39, 78.49] },
-    { name: 'Residential Area', aqi: 75, category: 'Moderate', coordinates: [17.35, 78.45] },
-    { name: 'City Park', aqi: 42, category: 'Good', coordinates: [17.43, 78.35] },
-  ]
-
+  const hotspotData = environment
+  ? [
+      {
+        name: `${selectedCity} Center`,
+        aqi: currentAQI,
+        category,
+        coordinates: [
+          environment.latitude,
+          environment.longitude,
+        ],
+      },
+      {
+        name: "North Zone",
+        aqi: currentAQI + 18,
+        category: getAQICategory(currentAQI + 18),
+        coordinates: [
+          environment.latitude + 0.03,
+          environment.longitude - 0.03,
+        ],
+      },
+      {
+        name: "South Zone",
+        aqi: Math.max(currentAQI - 12, 1),
+        category: getAQICategory(Math.max(currentAQI - 12, 1)),
+        coordinates: [
+          environment.latitude - 0.03,
+          environment.longitude + 0.03,
+        ],
+      },
+      {
+        name: "East Zone",
+        aqi: currentAQI + 7,
+        category: getAQICategory(currentAQI + 7),
+        coordinates: [
+          environment.latitude,
+          environment.longitude + 0.04,
+        ],
+      },
+    ]
+  : [];
+  const trendData = [...aqiHistory]
+    .reverse()
+    .map((item) => ({
+      time: new Date(item.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      AQI: item.aqi,
+    }));
   return (
     <div className="home-page">
       <section className="home-hero">
@@ -58,7 +165,7 @@ function Home() {
 
       <section className="home-dashboard" aria-label="Air quality dashboard overview">
         <div className="home-dashboard__row home-dashboard__row--two">
-          <AQICard city={city} aqi={currentAQI} category={category} />
+          <AQICard city={selectedCity} aqi={currentAQI} category={category} />
           <WeatherCard
             temperature={weather.temperature}
             humidity={weather.humidity}
@@ -113,10 +220,14 @@ function Home() {
                 <h2 className="home-dashboard__panel-title">Interactive Air Quality Map</h2>
               </div>
               <AQIMap
-                city={city}
+                city={selectedCity}
                 aqi={currentAQI}
                 category={category}
-                coordinates={[17.3850, 78.4867]}
+                coordinates={
+                  environment?.latitude && environment?.longitude
+                    ? [environment.latitude, environment.longitude]
+                    : [17.3850, 78.4867]
+                }
                 hotspots={hotspotData}
               />
             </article>

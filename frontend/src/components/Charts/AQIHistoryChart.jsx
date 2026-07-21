@@ -12,7 +12,6 @@ import './Charts.css'
 function AQIHistoryChart({ data = [] }) {
   return (
     <div className="chart-card">
-      <h3 className="chart-card__title">AQI History</h3>
       <div className="chart-card__chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
