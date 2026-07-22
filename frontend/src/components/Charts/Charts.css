@@ -36,3 +36,30 @@
     height: 230px;
   }
 }
+
+/* Home dashboard chart layout overrides to remove duplicate card style & padding */
+.home-dashboard .chart-card {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  transition: none;
+}
+
+.home-dashboard .chart-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.home-dashboard .chart-card__chart {
+  height: 320px;
+  padding-top: 0;
+}
+
+@media (max-width: 760px) {
+  .home-dashboard .chart-card__chart {
+    height: 260px;
+  }
+}
+

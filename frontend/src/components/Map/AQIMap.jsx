@@ -4,11 +4,6 @@ import L from 'leaflet'
 import PollutionHotspots from './PollutionHotspots'
 import './AQIMap.css'
 
-const defaultIcon = L.divIcon({
-  className: 'aqi-map-icon',
-  html: '<div class="aqi-map-marker"></div>',
-  iconSize: [18, 18],
-})
 
 function AQIMap({
   city = 'Hyderabad',
@@ -20,7 +15,33 @@ function AQIMap({
   const cityName = city || 'Hyderabad'
   const aqiValue = Number(aqi) || 78
   const categoryName = category || 'Moderate'
+  const getMarkerColor = (aqi) => {
+    if (aqi <= 50) return "#22c55e";
+    if (aqi <= 100) return "#eab308";
+    if (aqi <= 200) return "#f97316";
+    if (aqi <= 300) return "#ef4444";
+    if (aqi <= 400) return "#9333ea";
+    return "#7f1d1d";
+  };
 
+  const markerColor = getMarkerColor(aqi);
+
+  const cityIcon = L.divIcon({
+    className: "",
+    html: `
+      <div
+        style="
+          width:18px;
+          height:18px;
+          border-radius:50%;
+          background:${markerColor};
+          border:3px solid white;
+          box-shadow:0 0 0 6px ${markerColor}33;
+        ">
+      </div>
+    `,
+    iconSize: [18, 18],
+  });
   return (
     <div className="aqi-map-card">
       <div className="aqi-map-card__header">
@@ -44,18 +65,34 @@ function AQIMap({
           zoom={11}
           scrollWheelZoom={false}
         >
+        <div className="aqi-map-legend">
+          <div><span className="legend-dot good"></span> Good</div>
+          <div><span className="legend-dot satisfactory"></span> Satisfactory</div>
+          <div><span className="legend-dot moderate"></span> Moderate</div>
+          <div><span className="legend-dot poor"></span> Poor</div>
+          <div><span className="legend-dot verypoor"></span> Very Poor</div>
+          <div><span className="legend-dot severe"></span> Severe</div>
+        </div>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <Marker position={coordinates} icon={defaultIcon}>
+          <Marker position={coordinates} icon={cityIcon}>
             <Popup>
               <div className="aqi-map-popup">
-                <strong>{cityName}</strong>
-                <br />
-                AQI: {aqiValue}
-                <br />
-                Category: {categoryName}
+                <h4>📍 {cityName}</h4>
+
+                <p><strong>AQI:</strong> {aqiValue}</p>
+
+                <p>
+                  <strong>Category:</strong> {categoryName}
+                </p>
+
+                <hr />
+
+                <small>
+                  Live environmental monitoring
+                </small>
               </div>
             </Popup>
           </Marker>

@@ -4,6 +4,7 @@ import app.utils.path_setup
 
 from typing import Any
 
+from backend.app.services.aqi_service import collect_and_store_environmental_data
 from ml.predictor import (
     predict_all,
     predict_current,
@@ -40,7 +41,7 @@ async def get_forecast_prediction(city: str) -> dict[str, Any]:
 
 async def get_complete_prediction(city: str) -> dict[str, Any]:
 	"""Return the full AQI prediction bundle for a city."""
-
+	await collect_and_store_environmental_data(city)
 	try:
 		return predict_all(city)
 	except PredictorError:

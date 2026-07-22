@@ -16,6 +16,8 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
+from backend.app.utils.aqi_calculator import calculate_aqi
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -252,6 +254,10 @@ def _predict_bundle(city: str) -> dict[str, Any]:
 	coordinates = _fetch_coordinates(normalized_city)
 	components = _fetch_air_pollution(coordinates["lat"], coordinates["lon"])
 
+	live_aqi = calculate_aqi(
+		components["pm2_5"],
+		components["pm10"],
+	)
 	current_frame = _build_current_frame(normalized_city, components)
 	current_aqi = float(AQI_MODEL.predict(current_frame)[0])
 
@@ -260,11 +266,16 @@ def _predict_bundle(city: str) -> dict[str, Any]:
 	forecast_72_aqi = float(FORECAST_72_MODEL.predict(forecast_frame)[0])
 
 	category, recommendation = _categorize_aqi(current_aqi)
-
+	print("LIVE AQI:", live_aqi)
+	print("Returning:", {
+		"live_aqi": live_aqi,
+		"current_aqi": current_aqi
+	})
 	return {
 		"city": normalized_city,
 		"coordinates": coordinates,
 		"pollutants": _build_pollutant_snapshot(components),
+		"live_aqi": live_aqi,
 		"current_aqi": current_aqi,
 		"aqi_category": category,
 		"health_recommendation": recommendation,

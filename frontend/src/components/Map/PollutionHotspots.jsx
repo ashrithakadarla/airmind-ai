@@ -3,11 +3,13 @@ import './AQIMap.css'
 
 function PollutionHotspots({ hotspots = [] }) {
   const getColor = (aqi) => {
-    if (aqi >= 151) return '#d93025'
-    if (aqi >= 101) return '#f39c12'
-    if (aqi >= 76) return '#f1c40f'
-    return '#2e8b57'
-  }
+    if (aqi <= 50) return "#22c55e";      // Green (Good)
+    if (aqi <= 100) return "#eab308";     // Yellow (Satisfactory)
+    if (aqi <= 200) return "#f97316";     // Orange (Moderate)
+    if (aqi <= 300) return "#ef4444";     // Red (Poor)
+    if (aqi <= 400) return "#9333ea";     // Purple (Very Poor)
+    return "#7f1d1d";                     // Maroon (Severe)
+  };
 
   return (
     <>
@@ -18,15 +20,21 @@ function PollutionHotspots({ hotspots = [] }) {
             key={spot.name}
             center={spot.coordinates}
             radius={radius}
-            pathOptions={{ color: getColor(spot.aqi), fillColor: getColor(spot.aqi), fillOpacity: 0.8 }}
+            pathOptions={{ color: getColor(spot.aqi), fillColor: getColor(spot.aqi), fillOpacity: 0.9, weight: 2 }}
           >
             <Popup>
               <div className="aqi-map-popup">
-                <strong>{spot.name}</strong>
-                <br />
-                AQI: {spot.aqi}
-                <br />
-                Category: {spot.category}
+                <h4>📍 {spot.name}</h4>
+
+                <p><strong>AQI:</strong> {spot.aqi}</p>
+
+                <p>
+                  <strong>Category:</strong> {spot.category}
+                </p>
+
+                <hr />
+
+                <small>Environmental hotspot</small>
               </div>
             </Popup>
           </CircleMarker>
