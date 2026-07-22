@@ -9,26 +9,16 @@ from typing import Any, Dict, Optional
 
 from app.integrations.openweather_aqi import get_aqi_data
 from app.integrations.weather_service import get_weather_data
+from app.integrations.geocoding import get_coordinates
 
 logger = logging.getLogger(__name__)
 
 
-def _get_location_metadata() -> Dict[str, Any]:
-    """Build the location metadata payload from environment variables."""
-    lat = os.getenv("LAT", "").strip()
-    lon = os.getenv("LON", "").strip()
-    city = os.getenv("CITY", "Unknown").strip() or "Unknown"
-
-    try:
-        latitude = float(lat) if lat else None
-    except ValueError:
-        latitude = None
-
-    try:
-        longitude = float(lon) if lon else None
-    except ValueError:
-        longitude = None
-
+def _get_location_metadata(
+    city: str,
+    latitude: float,
+    longitude: float,
+) -> Dict[str, Any]:
     return {
         "city": city,
         "latitude": latitude,
@@ -36,7 +26,7 @@ def _get_location_metadata() -> Dict[str, Any]:
     }
 
 
-def collect_environmental_data() -> Dict[str, Any]:
+def collect_environmental_data(city: str) -> Dict[str, Any]:
     """
     Fetch, clean, standardize and merge
     weather and AQI data.
@@ -45,20 +35,40 @@ def collect_environmental_data() -> Dict[str, Any]:
     data document.
     """
     logger.info("Starting environmental data collection")
+    location = get_coordinates(city)
 
-    weather_data = get_weather_data()
-    aqi_data = get_aqi_data()
+    if location is None:
+        return {
+            "success": False,
+            "message": f"Could not find coordinates for {city}.",
+        }
+    weather_data = get_weather_data(city)
+    aqi_data = get_aqi_data(city)
 
     if weather_data is None or aqi_data is None:
         logger.warning("Failed to fetch environmental data from upstream services")
         return {
             "success": False,
             "message": "Failed to fetch environmental data.",
+            "weather": weather_data,
+            "aqi": aqi_data,
         }
 
     try:
+        location = get_coordinates(city)
+
+        if location is None:
+            return {
+                "success": False,
+                "message": f"Could not find coordinates for {city}",
+            }
+        
         document = {
-            **_get_location_metadata(),
+            **_get_location_metadata(
+                city=location["city"],
+                latitude=location["lat"],
+                longitude=location["lon"],
+            ),
 
             "weather": weather_data,
 
@@ -79,5 +89,5 @@ def collect_environmental_data() -> Dict[str, Any]:
             "message": "Failed to store environmental data.",
         }
 if __name__ == "__main__":
-    result = collect_environmental_data()
+    result = collect_environmental_data("Hyderabad")
     print(result)

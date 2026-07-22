@@ -7,6 +7,10 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 import requests
 from dotenv import load_dotenv
+from app.integrations.geocoding import get_coordinates
+
+from app.utils.aqi_calculator import calculate_aqi
+
 
 if TYPE_CHECKING:
     from app.models.aqi import AQIResponse
@@ -20,30 +24,22 @@ AIR_POLLUTION_API_URL = "https://api.openweathermap.org/data/2.5/air_pollution"
 REQUEST_TIMEOUT_SECONDS = 10
 
 
-def _get_api_config() -> Optional[Tuple[str, str, str]]:
-    """Read required service configuration from the environment."""
-    api_key = os.getenv("OPENWEATHER_API_KEY", "").strip()
-    lat = os.getenv("LAT", "").strip()
-    lon = os.getenv("LON", "").strip()
-
-    if not api_key or not lat or not lon:
-        logger.warning("AQI service is missing required environment configuration.")
-        return None
-
-    return api_key, lat, lon
-
-
-def get_aqi_data() -> Optional[Dict[str, Any]]:
+def get_aqi_data(city: str) -> Optional[Dict[str, Any]]:
     """Fetch current air quality data from the OpenWeather Air Pollution API.
 
     Returns a dictionary with the AQI metrics and timestamp when the request
     succeeds. Returns None when the request cannot be completed or the response is malformed.
     """
-    config = _get_api_config()
-    if config is None:
+    location = get_coordinates(city)
+
+    if location is None:
         return None
 
-    api_key, lat, lon = config
+    lat = location["lat"]
+    lon = location["lon"]
+
+    api_key = os.getenv("OPENWEATHER_API_KEY")
+
     params: Dict[str, str] = {
         "lat": lat,
         "lon": lon,
@@ -112,7 +108,10 @@ tz=timezone.utc).isoformat()
             timestamp = str(timestamp_value)
 
         return {
-            "aqi": main_metrics.get("aqi"),
+            "aqi": calculate_aqi(
+                components.get("pm2_5", 0),
+                components.get("pm10", 0),
+            ),
             "pm25": components.get("pm2_5"),
             "pm10": components.get("pm10"),
             "co": components.get("co"),
@@ -129,4 +128,4 @@ tz=timezone.utc).isoformat()
 
 
 if __name__ == "__main__":
-    print(get_aqi_data())
+    print(get_aqi_data("Hyderabad"))

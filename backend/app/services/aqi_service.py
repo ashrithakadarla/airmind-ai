@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 async def create_aqi(data: AQIResponse):
     return await insert_aqi(data.model_dump())
 
-async def get_latest_aqi():
-    data = await repo_get_latest_aqi()
+async def get_latest_aqi(city: str):
+    data = await repo_get_latest_aqi(city)
 
     if not data:
         return None
@@ -32,8 +32,8 @@ async def get_latest_aqi():
         timestamp=data["timestamp"]
     )
 
-async def get_aqi_history(limit: int = 50):
-    records = await repo_get_aqi_history(limit=limit)
+async def get_aqi_history(city: str, limit: int = 50):
+    records = await repo_get_aqi_history(city=city, limit=limit)
 
     if not records:
         return []
@@ -65,7 +65,7 @@ async def get_aqi_history(limit: int = 50):
         for r in valid_records
     ]
     
-async def collect_and_store_environmental_data() -> Optional[str]:
+async def collect_and_store_environmental_data(city: str) -> Optional[str]:
     """Collect standardized environmental data and store it in MongoDB.
 
     Returns:
@@ -75,23 +75,36 @@ async def collect_and_store_environmental_data() -> Optional[str]:
 
     # Collect the standardized environmental payload from the integration layer.
     try:
-        data = collect_environmental_data()
+        data = collect_environmental_data(city)
     except Exception as exc:
         logger.exception("Environmental data collection failed: %s", exc)
         return None
 
     # Stop here when the collector reports a failure.
     if not data.get("success"):
+        print(data)
         return None
 
     # Extract only the standardized document body that should be persisted.
     environmental_document = data.get("data", {})
-    if not environmental_document:
-        return None
+    # Create a flat AQI document for the dashboard
+    flat_document = {
+        "city": environmental_document["city"],
+        "aqi": environmental_document["air_quality"]["aqi"],
+        "pm25": environmental_document["air_quality"]["pm25"],
+        "pm10": environmental_document["air_quality"]["pm10"],
+        "temperature": environmental_document["weather"]["temperature"],
+        "humidity": environmental_document["weather"]["humidity"],
+        "timestamp": environmental_document["collected_at"],
+    }
 
-    # Persist the full document and return the inserted MongoDB document ID.
     try:
+        # Save full environmental data
         inserted_id = await insert_environmental_data(environmental_document)
+
+        # Save simplified AQI data
+        await insert_aqi(flat_document)
+
     except Exception as exc:
         logger.exception("Failed to store environmental data in MongoDB: %s", exc)
         return None

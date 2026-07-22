@@ -3,9 +3,9 @@ from pydantic import BaseModel
 
 class AQIResponse(BaseModel):
     city: str
-    aqi: int
-    pm25: int
-    pm10: int
-    temperature: int
-    humidity: int
+    aqi: float
+    pm25: float
+    pm10: float
+    temperature: float
+    humidity: float
     timestamp: str

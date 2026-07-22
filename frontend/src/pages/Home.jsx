@@ -7,6 +7,7 @@ import PollutantCard from '../components/PollutantCard/PollutantCard'
 import WeatherCard from '../components/WeatherCard/WeatherCard'
 import { useEffect, useState } from "react";
 import { useCity } from "../context/CityContext";
+
 import {
   getLatestAQI,
   getAQIHistory,
@@ -29,7 +30,7 @@ function Home() {
       try {
         const [latest, history, environment] = await Promise.all([
             getLatestAQI(selectedCity),
-            getAQIHistory(selectedCity, 10),
+            getAQIHistory(selectedCity),
             getLatestEnvironment(selectedCity),
         ]);
 
@@ -80,13 +81,15 @@ function Home() {
       value: dashboardData.pm10,
     },
   ];
-  const chartHistory = history.map((item) => ({
-      label: new Date(item.timestamp).toLocaleDateString("en-IN", {
-          month: "short",
-          day: "numeric",
-      }),
-      aqi: item.aqi,
-  }));
+  const chartHistory = [...history]
+    .reverse()
+    .map(item => ({
+        label: new Date(item.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+        }),
+        aqi: item.aqi,
+    }));
 
   const pollutantTrendData = history
     .slice()
@@ -142,15 +145,7 @@ function Home() {
       },
     ]
   : [];
-  const trendData = [...aqiHistory]
-    .reverse()
-    .map((item) => ({
-      time: new Date(item.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      AQI: item.aqi,
-    }));
+  
   return (
     <div className="home-page">
       <section className="home-hero">

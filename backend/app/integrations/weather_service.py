@@ -2,14 +2,13 @@ import os
 import requests
 from dotenv import load_dotenv
 import logging
+from app.integrations.geocoding import get_coordinates
 
 # Load environment variables
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
-LAT = os.getenv("LAT")
-LON = os.getenv("LON")
 if not API_KEY:
     raise ValueError("OPENWEATHER_API_KEY is missing from the .env file.")
 
@@ -17,14 +16,20 @@ BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
 from typing import Optional
 
-def get_weather_data() -> Optional[dict]:
+def get_weather_data(city: str) -> Optional[dict]:
     """
     Fetch current weather data from OpenWeather API.
     """
+    location = get_coordinates(city)
 
+    if location is None:
+        return None
+
+    lat = location["lat"]
+    lon = location["lon"]
     params = {
-        "lat": LAT,
-        "lon": LON,
+        "lat": lat,
+        "lon": lon,
         "appid": API_KEY,
         "units": "metric"
     }
@@ -59,5 +64,5 @@ def get_weather_data() -> Optional[dict]:
 
 # Run this file directly for testing
 if __name__ == "__main__":
-    weather = get_weather_data()
+    weather = get_weather_data("Hyderabad")
     print(weather)

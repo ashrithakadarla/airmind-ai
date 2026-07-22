@@ -57,7 +57,7 @@ async def insert_environmental_data(document: dict) -> str:
 	return str(result.inserted_id)
 
 
-async def get_latest_aqi() -> Optional[dict]:
+async def get_latest_aqi(city: str) -> Optional[dict]:
 	"""Return the most recent AQI document based on `timestamp`.
 
 	Returns:
@@ -68,11 +68,11 @@ async def get_latest_aqi() -> Optional[dict]:
 	if db is None:
 		raise RuntimeError("Database not initialized. Call connect_to_mongodb() first.")
 
-	doc = await db[COLLECTION].find_one(sort=[("timestamp", -1)])
+	doc = await db[COLLECTION].find_one({"city": city},sort=[("timestamp", -1)])
 	return _stringify_id(doc) if doc is not None else None
 
 
-async def get_aqi_history(limit: int = 50) -> List[dict]:
+async def get_aqi_history(city: str,limit: int = 50) -> List[dict]:
 	"""Return a list of AQI documents ordered by `timestamp` descending.
 
 	Args:
@@ -86,6 +86,21 @@ async def get_aqi_history(limit: int = 50) -> List[dict]:
 	if db is None:
 		raise RuntimeError("Database not initialized. Call connect_to_mongodb() first.")
 
-	cursor = db[COLLECTION].find().sort("timestamp", -1).limit(limit)
+	cursor = (
+		db[COLLECTION]
+		.find({"city": city})
+		.sort("timestamp", -1)
+		.limit(limit)
+	)
 	docs = await cursor.to_list(length=limit)
 	return [_stringify_id(d) for d in docs]
+
+async def get_latest_environment(city: str):
+    db = get_database()
+
+    doc = await db[ENVIRONMENTAL_COLLECTION].find_one(
+        {"city": city},
+        sort=[("collected_at", -1)]
+    )
+
+    return _stringify_id(doc) if doc else None

@@ -35,9 +35,20 @@ function Prediction() {
   if (loading) return <h2>Loading prediction...</h2>;
   if (!prediction) return <h2>Prediction unavailable.</h2>;
 
-  const currentAQI = Math.round(prediction.current_aqi);
+  const liveAQI = Math.round(prediction.live_aqi);
 
-  const category = prediction.aqi_category;
+  const predictedAQI = Math.round(prediction.current_aqi);
+
+  const difference = predictedAQI - liveAQI;
+
+  const insight =
+    difference > 0
+      ? `AI predicts AQI may increase by ${difference} points compared to the current live AQI.`
+      : difference < 0
+      ? `AI predicts AQI may decrease by ${Math.abs(
+          difference
+        )} points compared to the current live AQI.`
+      : "AI predicts the AQI will remain stable.";
 
   const cityName = prediction.city;
 
@@ -48,18 +59,18 @@ function Prediction() {
   const recommendation = prediction.health_recommendation;
 
   const forecastData = [
-      {
-          label: "Current",
-          aqi: currentAQI,
-      },
-      {
-          label: "24 Hours",
-          aqi: forecast24,
-      },
-      {
-          label: "72 Hours",
-          aqi: forecast72,
-      },
+    {
+      label: "Now",
+      aqi: predictedAQI,
+    },
+    {
+      label: "24 Hours",
+      aqi: forecast24,
+    },
+    {
+      label: "72 Hours",
+      aqi: forecast72,
+    },
   ];
 
   return (
@@ -80,8 +91,24 @@ function Prediction() {
       </section>
 
       <section className="prediction-dashboard">
-        <div className="prediction-dashboard__row prediction-dashboard__row--single">
-          <AQICard city={cityName} aqi={currentAQI} category={category} />
+        <div className="prediction-dashboard__row prediction-dashboard__row--two">
+          <AQICard
+              title="Live AQI"
+              city={cityName}
+              aqi={liveAQI}
+              category={getAQICategory(liveAQI)}
+          />
+
+          <AQICard
+              title="AI Predicted AQI"
+              city={cityName}
+              aqi={predictedAQI}
+              category={getAQICategory(predictedAQI)}
+          />
+        </div>
+
+        <div className="prediction-insight">
+          <p>{insight}</p>
         </div>
 
         <div className="prediction-dashboard__row prediction-dashboard__row--two">

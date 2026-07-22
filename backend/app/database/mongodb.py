@@ -15,10 +15,13 @@ async def connect_to_mongodb():
     global client, database
 
     client = AsyncIOMotorClient(MONGODB_URI)
+
+    # Actually test the connection
+    await client.admin.command("ping")
+
     database = client[DATABASE_NAME]
 
     print("Connected to MongoDB Atlas")
-
 
 async def close_mongodb_connection():
     global client
