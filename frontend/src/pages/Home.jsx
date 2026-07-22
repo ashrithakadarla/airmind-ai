@@ -7,6 +7,7 @@ import PollutantCard from '../components/PollutantCard/PollutantCard'
 import WeatherCard from '../components/WeatherCard/WeatherCard'
 import { useEffect, useState } from "react";
 import { useCity } from "../context/CityContext";
+import Loading from "../components/Loading/Loading";
 
 import {
   getLatestAQI,
@@ -49,13 +50,17 @@ function Home() {
 
     const interval = setInterval(() => {
       loadData();
-    }, 300000); // every 5 minutes
+    }, 1800000); // every 5 minutes
 
     return () => clearInterval(interval);
 
   }, [selectedCity]);
 
-  if (loading) return <h2>Loading...</h2>;
+  if (loading) {
+    return (
+      <Loading message="Analyzing live environmental conditions..." />
+    );
+  }
   if (!dashboardData) return <h2>Unable to load AQI data.</h2>;
   
 
@@ -72,14 +77,13 @@ function Home() {
   const category = getAQICategory(currentAQI);
   
   const pollutants = [
-    {
-      name: "PM2.5",
-      value: dashboardData.pm25,
-    },
-    {
-      name: "PM10",
-      value: dashboardData.pm10,
-    },
+    { name: "PM2.5", value: dashboardData.pm25 },
+    { name: "PM10", value: dashboardData.pm10 },
+    { name: "CO", value: dashboardData.co },
+    { name: "NO₂", value: dashboardData.no2 },
+    { name: "SO₂", value: dashboardData.so2 },
+    { name: "O₃", value: dashboardData.o3 },
+    { name: "NH₃", value: dashboardData.nh3 },
   ];
   const chartHistory = [...history]
     .reverse()
@@ -95,7 +99,10 @@ function Home() {
     .slice()
     .reverse()
     .map((item) => ({
-      label: new Date(item.timestamp).toLocaleDateString(),
+      label: new Date(item.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+        }),
       pm25: item.pm25,
       pm10: item.pm10,
     }));

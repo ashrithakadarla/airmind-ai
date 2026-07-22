@@ -4,6 +4,7 @@ import ForecastCard from '../components/ForecastCard/ForecastCard'
 import Footer from '../components/Footer/Footer'
 import HealthRecommendation from '../components/HealthRecommendation/HealthRecommendation'
 import SearchBar from '../components/SearchBar/SearchBar'
+import Loading from "../components/Loading/Loading";
 import { useEffect, useState } from "react";
 import { getPrediction } from "../services/api";
 import { getAQICategory } from "../utils/aqi";
@@ -32,7 +33,11 @@ function Prediction() {
 
     loadPrediction();
   }, [selectedCity]);
-  if (loading) return <h2>Loading prediction...</h2>;
+  if (loading) {
+    return (
+      <Loading message="Generating AI-powered AQI forecast..." />
+    );
+  }
   if (!prediction) return <h2>Prediction unavailable.</h2>;
 
   const liveAQI = Math.round(prediction.live_aqi);

@@ -108,3 +108,35 @@
     min-height: 270px;
   }
 }
+
+.aqi-map-card__map {
+  position: relative;
+}
+
+.aqi-map-legend {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.95);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.good { background:#22c55e; }
+.satisfactory { background:#eab308; }
+.moderate { background:#f97316; }
+.poor { background:#ef4444; }
+.verypoor { background:#9333ea; }
+.severe { background:#7f1d1d; }

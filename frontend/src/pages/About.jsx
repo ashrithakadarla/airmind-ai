@@ -5,15 +5,9 @@ import {
   FaChartLine,
   FaSearch,
   FaWind,
-  FaThermometerHalf,
-  FaShieldAlt,
-  FaMobileAlt,
-  FaSatelliteDish,
   FaTools,
-  FaUsers,
 } from 'react-icons/fa'
-import { FiActivity, FiDatabase, FiCpu, FiMonitor, FiGlobe } from 'react-icons/fi'
-import Footer from '../components/Footer/Footer'
+import { FiActivity, FiMonitor, FiGlobe, FiDatabase} from 'react-icons/fi'
 import './About.css'
 
 function About() {
@@ -59,19 +53,19 @@ function About() {
   const techGroups = [
     {
       title: 'Frontend',
-      items: ['React', 'React Router', 'Recharts', 'React Icons'],
+      items: ['React', 'React Router', 'Recharts', 'React Leaflet', 'Axios', 'React Icons'],
     },
     {
       title: 'Backend',
-      items: ['FastAPI'],
+      items: ['FastAPI', 'Pydantic'],
     },
     {
       title: 'Database',
-      items: ['MongoDB'],
+      items: ['MongoDB Atlas'],
     },
     {
       title: 'Machine Learning',
-      items: ['Python', 'Scikit-learn'],
+      items: ['Python', 'Scikit-learn', 'Joblib'],
     },
     {
       title: 'Deployment',
@@ -80,19 +74,19 @@ function About() {
   ]
 
   const teamMembers = [
-    { name: 'Ava', role: 'Data Collection & API Integration', initials: 'AV' },
-    { name: 'Noah', role: 'Backend Development', initials: 'NO' },
-    { name: 'Mina', role: 'Machine Learning & Prediction', initials: 'MI' },
-    { name: 'Leo', role: 'Frontend Dashboard', initials: 'LE' },
+    { name: 'Ishwika Bitla', role: 'Data Collection & API Integration', initials: 'IB' },
+    { name: 'Ashritha Kadarla', role: 'Backend Development', initials: 'AK' },
+    { name: 'Varshitha Shenishetty', role: 'Machine Learning & Prediction', initials: 'VS' },
+    { name: 'Sri Harshitha Chapala', role: 'Frontend Dashboard', initials: 'SC' },
   ]
 
   const enhancements = [
-    'Real-time Alerts',
-    'Mobile Application',
-    'Multiple City Comparison',
+    'Real-time AQI Notifications',
+    'Multi-city Dashboard',
     'IoT Sensor Integration',
-    'Satellite Data Integration',
+    'Satellite-based Pollution Monitoring',
     'AI Health Risk Assessment',
+    'Mobile Application',
   ]
 
   return (
@@ -100,9 +94,9 @@ function About() {
       <section className="about-hero">
         <div className="about-hero__content">
           <p className="about-hero__eyebrow">About AirMind AI</p>
-          <h1 className="about-hero__title">About AirMind AI</h1>
+          <h1 className="about-hero__title">AirMind AI</h1>
           <p className="about-hero__subtitle">
-            AirMind AI is an intelligent air quality monitoring and forecasting platform that combines environmental data, weather information, and machine learning to provide meaningful air quality insights and health recommendations.
+            AirMind AI combines live environmental monitoring, AI-powered forecasting, and personalized health recommendations to help citizens understand and respond to changing air quality in real time.
           </p>
         </div>
       </section>
@@ -111,7 +105,7 @@ function About() {
         <div className="about-section__header">
           <h2 className="about-section__title">Project Overview</h2>
           <p className="about-section__text">
-            AirMind AI brings together monitoring, forecasting, and guidance in one modern experience.
+            The platform integrates live environmental data, weather conditions, historical trends, and machine learning models to provide accurate air quality insights and proactive health guidance.
           </p>
         </div>
         <div className="about-grid">
@@ -200,7 +194,6 @@ function About() {
         </div>
       </section>
 
-      <Footer />
     </div>
   )
 }

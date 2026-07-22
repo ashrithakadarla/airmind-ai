@@ -63,8 +63,7 @@ def get_aqi_data(city: str) -> Optional[Dict[str, Any]]:
     try:
         payload = response.json()
     except ValueError as exc:
-        logger.warning("AQI response contained invalid JSON: %s", exc
-)
+        logger.warning("AQI response contained invalid JSON: %s", exc)
         return None
 
     try:
@@ -100,12 +99,18 @@ def get_aqi_data(city: str) -> Optional[Dict[str, Any]]:
 
         timestamp_value = pollution_entry.get("dt")
         if isinstance(timestamp_value, (int, float)):
-            timestamp = datetime.fromtimestamp(int(timestamp_value), 
-tz=timezone.utc).isoformat()
+            timestamp = datetime.fromtimestamp(int(timestamp_value),tz=timezone.utc).isoformat()
         elif timestamp_value is None:
             timestamp = None
         else:
             timestamp = str(timestamp_value)
+
+        print("PM2.5:", components.get("pm2_5"))
+        print("PM10 :", components.get("pm10"))
+        print("Calculated AQI:", calculate_aqi(
+            components.get("pm2_5", 0),
+            components.get("pm10", 0),
+        ))
 
         return {
             "aqi": calculate_aqi(
@@ -122,8 +127,7 @@ tz=timezone.utc).isoformat()
             "timestamp": timestamp,
         }
     except (KeyError, IndexError, TypeError, ValueError) as exc:
-        logger.warning("AQI response payload could not be parsed: %s"
-, exc)
+        logger.warning("AQI response payload could not be parsed: %s", exc)
         return None
 
 
