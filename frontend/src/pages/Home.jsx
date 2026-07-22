@@ -41,6 +41,7 @@ function Home() {
         setAQIHistory(history);
       } catch (err) {
         console.error(err);
+        return;
       } finally {
         setLoading(false);
       }
